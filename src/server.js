@@ -49,7 +49,7 @@ app.post('/logout', auth, (_req, res) => { res.setHeader('Set-Cookie', `${cookie
 app.get('/', auth, async (_req, res, next) => {
   try {
     const s = await getSettings();
-    const connected = Boolean(env('META_PAGE_ID') && env('META_PAGE_ACCESS_TOKEN') && env('META_APP_SECRET'));
+    const connected = Boolean(env('META_IG_USER_ID') && env('META_IG_ACCESS_TOKEN') && env('META_APP_SECRET'));
     const status = s.enabled ? '<span class="status"><i class="dot on"></i>Automation enabled</span>' : '<span class="status"><i class="dot"></i>Paused</span>';
     const callback = `${esc(env('APP_BASE_URL') || 'https://your-service.onrender.com')}/webhook`;
     const content = `<div class="top"><div><h1>Campaign settings</h1><p>Edit these settings for each new ARG. Your Meta credentials remain private in the host settings.</p></div>${status}</div>
@@ -97,10 +97,12 @@ function verifyWebhook(req, res, next) {
 function replyText(template, settings) { return template.replaceAll('{campaign}', settings.campaignName).replaceAll('{discord_link}', settings.discordInvite); }
 function matches(text, keywords) { return Boolean(text) && (!keywords.length || keywords.some((word) => text.toLocaleLowerCase().includes(word.toLocaleLowerCase()))); }
 
-async function callMeta(path, body) {
-  const version = env('META_GRAPH_API_VERSION') || 'v27.0'; const access = env('META_PAGE_ACCESS_TOKEN');
-  if (!access || !env('META_PAGE_ID')) throw new Error('Meta Page ID or access token is not configured.');
-  const response = await fetch(`https://graph.facebook.com/${version}/${path}?access_token=${encodeURIComponent(access)}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+async function callMeta(body) {
+  const version = env('META_GRAPH_API_VERSION') || 'v27.0';
+  const access = env('META_IG_ACCESS_TOKEN');
+  const igUserId = env('META_IG_USER_ID');
+  if (!access || !igUserId) throw new Error('Instagram account ID or access token is not configured.');
+  const response = await fetch(`https://graph.instagram.com/${version}/${igUserId}/messages`, { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${access}` }, body: JSON.stringify(body) });
   if (!response.ok) throw new Error(`Meta Send API returned ${response.status}: ${(await response.text()).slice(0, 300)}`);
 }
 async function handleDm(event) {
@@ -109,14 +111,14 @@ async function handleDm(event) {
   const settings = await getSettings(); if (!settings.enabled || !matches(message.text, settings.dmKeywords)) return;
   const id = message.mid || `${event.sender.id}:${event.timestamp}:${message.text}`;
   if (!(await claimEvent(`dm:${id}`))) return;
-  await callMeta(`${env('META_PAGE_ID')}/messages`, { recipient: { id: event.sender.id }, message: { text: replyText(settings.dmReply, settings) } });
+  await callMeta({ recipient: { id: event.sender.id }, message: { text: replyText(settings.dmReply, settings) } });
 }
 async function handleComment(value) {
   if (!value.id || !value.text || !value.from?.id) return;
   const settings = await getSettings(); if (!settings.enabled || !matches(value.text, settings.commentKeywords)) return;
   if (env('META_IG_USER_ID') && settings.ignoreOwnMessages && value.from.id === env('META_IG_USER_ID')) return;
   if (!(await claimEvent(`comment:${value.id}`))) return;
-  await callMeta(`${env('META_PAGE_ID')}/messages`, { recipient: { comment_id: value.id }, message: { text: replyText(settings.commentReply, settings) } });
+  await callMeta({ recipient: { comment_id: value.id }, message: { text: replyText(settings.commentReply, settings) } });
 }
 app.post('/webhook', verifyWebhook, (req, res) => {
   res.sendStatus(200);

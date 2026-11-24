@@ -17,9 +17,9 @@ services:
         sync: false
       - key: META_APP_SECRET
         sync: false
-      - key: META_PAGE_ID
+      - key: META_IG_USER_ID
         sync: false
-      - key: META_PAGE_ACCESS_TOKEN
+      - key: META_IG_ACCESS_TOKEN
         sync: false
       - key: META_GRAPH_API_VERSION
         value: v27.0

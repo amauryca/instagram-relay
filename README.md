@@ -26,9 +26,9 @@ To receive real Meta webhooks locally, expose the local server through an HTTPS 
 
 Meta's screens and permission names can change. At a high level:
 
-1. Use an Instagram **Creator or Business** account and connect it to a Facebook Page.
-2. Create a Meta developer app for Instagram messaging. Configure the app, webhook callback, and verification token.
-3. Request the messaging and comment permissions required for your chosen login flow. Subscribe to Instagram `messages` and `comments` webhook fields, and enable the connected-tools setting that allows API access to Instagram messages.
+1. Use an Instagram **Creator or Business** account.
+2. Create a Meta developer app using **Manage messaging & content on Instagram**. This project uses Instagram Login, which does not require a Facebook Page. Authorize the Instagram professional account you want the app to manage.
+3. Request the Instagram messaging and comment permissions required by the Instagram Login flow. Configure the webhook callback and verification token, then subscribe to the `messages` and `comments` fields.
 4. Complete Meta App Review and obtain the required access for people outside your app roles. Comment webhooks and private replies have additional access requirements; Meta's current documentation is authoritative.
 5. Add the values below as environment variables in your host. Set `APP_BASE_URL` to your deployed service's public base URL.
 6. In the settings page, enter the Discord invite and copy, check the trigger keywords, then turn on **Enable replies**.
@@ -41,8 +41,8 @@ Required environment values:
 | `SESSION_SECRET` | Signs the admin login cookie; use a long random value |
 | `META_VERIFY_TOKEN` | Shared token used for Meta's webhook verification handshake |
 | `META_APP_SECRET` | Verifies that incoming webhook requests are genuinely signed by Meta |
-| `META_PAGE_ID` | ID of the Facebook Page connected to Instagram |
-| `META_PAGE_ACCESS_TOKEN` | Page access token with the required Instagram messaging permissions |
+| `META_IG_USER_ID` | ID of the connected Instagram professional account |
+| `META_IG_ACCESS_TOKEN` | Instagram user access token with the required Instagram messaging permissions |
 | `META_GRAPH_API_VERSION` | Graph API version; defaults to `v27.0` |
 | `APP_BASE_URL` | Public service URL, without `/webhook` |
 | `DATABASE_URL` | Optional PostgreSQL connection string for durable settings and event deduplication |
