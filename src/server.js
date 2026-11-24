@@ -99,10 +99,11 @@ function matches(text, keywords) { return Boolean(text) && (!keywords.length || 
 
 async function callMeta(body) {
   const version = env('META_GRAPH_API_VERSION') || 'v27.0';
+  const graphHost = env('META_GRAPH_API_HOST') || 'graph.facebook.com';
   const access = env('META_IG_ACCESS_TOKEN');
   const igUserId = env('META_IG_USER_ID');
   if (!access || !igUserId) throw new Error('Instagram account ID or access token is not configured.');
-  const response = await fetch(`https://graph.instagram.com/${version}/${igUserId}/messages`, { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${access}` }, body: JSON.stringify(body) });
+  const response = await fetch(`https://${graphHost}/${version}/${igUserId}/messages`, { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${access}` }, body: JSON.stringify(body) });
   if (!response.ok) throw new Error(`Meta Send API returned ${response.status}: ${(await response.text()).slice(0, 300)}`);
 }
 async function handleDm(event) {
